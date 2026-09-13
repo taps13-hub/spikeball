@@ -1,0 +1,54 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#234c3b">
+  <title>{% block title %}Leaderboard{% endblock %} · Spikeball Club</title>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="{% url 'leaderboard' %}"><span class="brand-mark" aria-hidden="true"></span> Spikeball Club</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="{% url 'leaderboard' %}"{% if request.resolver_match.url_name == 'leaderboard' %} aria-current="page"{% endif %}>Leaderboard</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'player_new' %}"{% if request.resolver_match.url_name == 'player_new' %} aria-current="page"{% endif %}>Add player</a>
+          <a href="{% url 'match_new' %}"{% if request.resolver_match.url_name == 'match_new' %} aria-current="page"{% endif %}>Record match</a>
+          {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin</a>{% endif %}
+          <form class="logout-form" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="nav-button" type="submit">Log out</button>
+          </form>
+        {% else %}
+          <a class="nav-login" href="{% url 'login' %}">Log in</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main id="main-content" class="shell main-content" tabindex="-1">
+    {% if messages %}
+      <div class="messages" aria-label="Notifications">
+        {% for message in messages %}
+          <div class="message {{ message.tags }}"{% if message.level >= 40 %} role="alert"{% else %} role="status"{% endif %}>{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <p>Good games. Friendly competition.</p>
+      {% if user.is_authenticated %}
+        <a href="{% url 'password_change' %}">Change password</a>
+      {% else %}
+        <p>Public standings · Invite-only scorekeeping</p>
+      {% endif %}
+    </div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

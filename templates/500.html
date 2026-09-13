@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong{% endblock %}
+{% block content %}
+  <section class="panel prose-panel">
+    <p class="eyebrow">500 · A short timeout</p>
+    <h1>Something went wrong.</h1>
+    <p>We couldn’t complete that request. Please try again later. If you were recording a match, check the leaderboard before submitting it again.</p>
+    <a class="button" href="{% url 'leaderboard' %}">Back to leaderboard</a>
+  </section>
+{% endblock %}

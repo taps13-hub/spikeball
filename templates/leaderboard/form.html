@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+  <div class="form-page">
+    <a class="back-link" href="{% url 'leaderboard' %}">← Leaderboard</a>
+    <p class="eyebrow">Spikeball Club</p>
+    <h1>{{ title }}</h1>
+    <form method="post" class="panel form-panel">
+      {% csrf_token %}
+      {% include "leaderboard/_form_fields.html" %}
+      <div class="form-actions"><button class="button" type="submit">{{ button }}</button><a href="{% url 'leaderboard' %}">Cancel</a></div>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <div>
+      <p class="eyebrow">The club standings</p>
+      <h1>A little friendly<br>competition.</h1>
+      <p class="lede">Every rally counts. See where everyone stands after the latest games.</p>
+    </div>
+    {% if user.is_authenticated %}
+      <a class="button" href="{% url 'match_new' %}">Record a match <span aria-hidden="true">↗</span></a>
+    {% else %}
+      <a class="button" href="{% url 'login' %}">Log in to record a match</a>
+    {% endif %}
+  </section>
+  <section class="panel" aria-labelledby="standings-title">
+    <div class="panel-heading">
+      <h2 id="standings-title">Leaderboard</h2>
+      <span class="tag">{{ players|length }} player{{ players|length|pluralize }}</span>
+    </div>
+    {% if players %}
+      <div class="table-scroll" role="region" aria-label="Player standings" tabindex="0">
+        <table class="standings">
+          <caption class="visually-hidden">Players ranked by ELO rating, with wins and losses.</caption>
+          <thead><tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col" class="numeric">ELO</th><th scope="col" class="numeric">Wins</th><th scope="col" class="numeric">Losses</th></tr></thead>
+          <tbody>
+            {% for player in players %}
+              <tr>
+                <td><span class="rank{% if forloop.first %} rank-first{% endif %}">{{ forloop.counter }}</span></td>
+                <th scope="row"><a class="player-link" href="{% url 'player_detail' player.pk %}">{{ player.name }}</a></th>
+                <td class="numeric rating">{{ player.rating|floatformat:0 }}</td>
+                <td class="numeric">{{ player.wins }}</td>
+                <td class="numeric">{{ player.losses }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="panel-note">Everyone starts at 1,000 ELO. Ratings update with each result; score margin doesn’t affect the change.</p>
+    {% else %}
+      <div class="empty-state">
+        <p class="eyebrow">A fresh start</p>
+        <h3>The court is open.</h3>
+        <p>No players yet. Add the crew, then record your first game.</p>
+        {% if user.is_authenticated %}
+          <a class="button" href="{% url 'player_new' %}">Add the first player</a>
+        {% else %}
+          <a class="button" href="{% url 'login' %}">Log in to add a player</a>
+          <p class="small muted">Need an account? Ask a club administrator for an invitation.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

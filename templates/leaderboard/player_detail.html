@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static tz %}
+{% block title %}{{ player.name }}{% endblock %}
+{% block content %}
+  {% get_current_timezone as display_timezone %}
+  <a class="back-link" href="{% url 'leaderboard' %}">← All players</a>
+  <section class="page-heading player-heading">
+    <div>
+      <p class="eyebrow">Player profile</p>
+      <h1>{{ player.name }}</h1>
+    </div>
+    {% if user.is_authenticated %}<a class="button button-secondary" href="{% url 'match_new' %}">Record a match</a>{% endif %}
+  </section>
+  <dl class="stats">
+    <div class="stat stat-rating"><dt>Current ELO</dt><dd>{{ player.rating|floatformat:0 }}</dd></div>
+    <div class="stat"><dt>Wins</dt><dd>{{ player.wins }}</dd></div>
+    <div class="stat"><dt>Losses</dt><dd>{{ player.losses }}</dd></div>
+  </dl>
+  <section class="panel section-gap" aria-labelledby="history-title">
+    <div class="panel-heading">
+      <div><p class="eyebrow">The long game</p><h2 id="history-title">Rating history</h2></div>
+      <span class="tag">{{ history|length }} game{{ history|length|pluralize }}</span>
+    </div>
+    <div id="rating-chart-panel" class="chart-panel" hidden>
+      <div class="chart-container">
+        <canvas id="rating-chart" role="img" aria-label="ELO rating history for {{ player.name }}, starting at 1000" aria-describedby="chart-description">
+          The rating history table below contains every chart value.
+        </canvas>
+      </div>
+      <p id="chart-description" class="small muted">Starts at 1,000 ELO, then one point per game in playing order. Chart dates use your local timezone. All values are also listed below.</p>
+    </div>
+    <div class="table-scroll" role="region" aria-label="Chronological rating history" tabindex="0">
+      <table>
+        <caption>After each game · Times in {{ display_timezone }}</caption>
+        <thead><tr><th scope="col">Played</th><th scope="col">Match</th><th scope="col" class="numeric">ELO</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Starting rating</th><td>Before any games</td><td class="numeric">1,000</td></tr>
+          {% for entry in history %}
+            <tr>
+              <th scope="row"><time datetime="{{ entry.match.played_at|date:'c' }}">{{ entry.match.played_at|localtime|date:"j M Y, H:i" }}</time></th>
+              <td>#{{ entry.match_id }}</td>
+              <td class="numeric">{{ entry.rating|floatformat:0 }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3" class="table-empty">No games yet. The first result will start this player’s rating history.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="panel-note">Ratings are rounded for display. Backdated results and corrections can update the whole history.</p>
+  </section>
+  <section class="panel section-gap" aria-labelledby="matches-title">
+    <div class="panel-heading"><h2 id="matches-title">Recent matches</h2><span class="muted small">Latest 20</span></div>
+    {% if matches %}
+      <div class="table-scroll" role="region" aria-label="Recent match results" tabindex="0">
+        <table class="matches">
+          <caption>Active results only · Times in {{ display_timezone }}</caption>
+          <thead><tr><th scope="col">Played</th><th scope="col">Team 1</th><th scope="col" class="numeric">Score</th><th scope="col">Team 2</th></tr></thead>
+          <tbody>
+            {% for match in matches %}
+              <tr>
+                <th scope="row"><time datetime="{{ match.played_at|date:'c' }}">{{ match.played_at|localtime|date:"j M Y, H:i" }}</time><span class="match-id">Match #{{ match.pk }}</span></th>
+                <td>{{ match.team1_player1.name }}<br><span class="muted">&amp; {{ match.team1_player2.name }}</span></td>
+                <td class="numeric score"><span aria-label="Team 1: {{ match.team1_score }}, Team 2: {{ match.team2_score }}">{{ match.team1_score }} – {{ match.team2_score }}</span></td>
+                <td>{{ match.team2_player1.name }}<br><span class="muted">&amp; {{ match.team2_player2.name }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>First game still to come.</h3>
+        <p>Played matches will appear here, with both teams and the final score.</p>
+        {% if user.is_authenticated %}<a class="button button-secondary" href="{% url 'match_new' %}">Record a match</a>{% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
+{% block scripts %}
+  {{ chart_data|json_script:"rating-chart-data" }}
+  <script src="{% static 'js/chart.umd.min.js' %}" defer></script>
+  <script src="{% static 'js/player-chart.js' %}" defer></script>
+{% endblock %}

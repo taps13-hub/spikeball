@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Invitation unavailable{% endblock %}
+{% block content %}
+  <section class="panel prose-panel">
+    <p class="eyebrow">Invitation unavailable</p>
+    <h1>This link is no longer valid.</h1>
+    <p>It may have expired, been replaced or revoked, or already been used. Ask a club administrator for a new invitation.</p>
+    <div class="form-actions"><a class="button" href="{% url 'login' %}">Log in</a><a href="{% url 'leaderboard' %}">View leaderboard</a></div>
+  </section>
+{% endblock %}

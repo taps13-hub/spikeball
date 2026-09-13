@@ -1,0 +1,18 @@
+{% extends "admin/change_form.html" %}
+{% block content %}
+  {{ block.super }}
+  {% if can_invite and original and not original.accepted_at and not original.revoked_at %}
+    <section class="module" aria-labelledby="invitation-actions-title">
+      <h2 id="invitation-actions-title">Invitation actions</h2>
+      <p>Resending emails a fresh invitation and invalidates the previous link. Revoking prevents this invitation from being used.</p>
+      <form method="post" action="{{ resend_url }}">
+        {% csrf_token %}
+        <div class="submit-row"><input type="submit" value="Resend invitation"></div>
+      </form>
+      <form method="post" action="{{ revoke_url }}">
+        {% csrf_token %}
+        <div class="submit-row"><input type="submit" value="Revoke invitation"></div>
+      </form>
+    </section>
+  {% endif %}
+{% endblock %}

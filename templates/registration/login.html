@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+  <div class="form-page">
+    <p class="eyebrow">Welcome back</p>
+    <h1>Let’s play.</h1>
+    <p class="lede">Log in to add players and record results.</p>
+    {% if next and user.is_authenticated %}<p class="message">Your account cannot access that page. Log in with an account that has permission.</p>{% endif %}
+    <form method="post" class="panel form-panel">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% include "leaderboard/_form_fields.html" %}
+      <div class="form-actions"><button class="button" type="submit">Log in</button><a href="{% url 'password_reset' %}">Forgot password?</a></div>
+    </form>
+    <p class="small muted">New here? Accounts are invitation-only. Ask a club administrator to invite you.</p>
+  </div>
+{% endblock %}
