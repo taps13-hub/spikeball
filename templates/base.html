@@ -12,7 +12,7 @@
   <a class="skip-link" href="#main-content">Skip to content</a>
   <header class="site-header">
     <div class="shell header-inner">
-      <a class="brand" href="{% url 'leaderboard' %}"><span class="brand-mark" aria-hidden="true"></span> Spikeball Club</a>
+      <a class="brand" href="{% url 'leaderboard' %}"><img class="brand-photo" src="{% static 'images/spikeball.png' %}" alt=""> Spikadaball</a>
       <nav class="site-nav" aria-label="Main navigation">
         <a href="{% url 'leaderboard' %}"{% if request.resolver_match.url_name == 'leaderboard' %} aria-current="page"{% endif %}>Leaderboard</a>
         {% if user.is_authenticated %}

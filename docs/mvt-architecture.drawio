@@ -1,0 +1,87 @@
+<mxfile host="Electron" agent="copilot-cli">
+  <diagram name="MVT Architecture" id="mvt-arch">
+    <mxGraphModel dx="1139" dy="532" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="browser" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" value="Browser" vertex="1">
+          <mxGeometry height="60" width="120" x="40" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="urls" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="config/urls.py&#xa;(routing)" vertex="1">
+          <mxGeometry height="60" width="140" x="240" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="views" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" value="leaderboard/views.py&#xa;(V — views)" vertex="1">
+          <mxGeometry height="60" width="150" x="460" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="forms" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="leaderboard/forms.py&#xa;(input validation)" vertex="1">
+          <mxGeometry height="60" width="150" x="460" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="services" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="leaderboard/services.py&#xa;(business logic,&#xa;locked replay)" vertex="1">
+          <mxGeometry height="70" width="160" x="700" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="elo" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="leaderboard/elo.py&#xa;(pure ELO maths)" vertex="1">
+          <mxGeometry height="60" width="150" x="705" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="models" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" value="leaderboard/models.py&#xa;(M — models)&#xa;User, Player, Match,&#xa;RatingHistory, Invitation" vertex="1">
+          <mxGeometry height="80" width="180" x="690" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="templates" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="templates/&#xa;(T — templates)&#xa;base.html, leaderboard/*.html" vertex="1">
+          <mxGeometry height="70" width="190" x="440" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="static" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="static/&#xa;site.css, player-chart.js&#xa;chart.umd.min.js" vertex="1">
+          <mxGeometry height="70" width="160" x="810" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;" value="PostgreSQL&#xa;(spikeball db)" vertex="1">
+          <mxGeometry height="80" width="110" x="950" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="settings" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;dashed=1;" value="config/settings.py&#xa;(.env config: DB,&#xa;TIME_ZONE, email)" vertex="1">
+          <mxGeometry height="70" width="180" x="40" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="admin" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="leaderboard/admin.py&#xa;(staff corrections,&#xa;invitations)" vertex="1">
+          <mxGeometry height="70" width="150" x="460" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="browser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="urls" value="HTTP request">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="urls" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="views" value="route match">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="views" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="forms" value="validate form">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="forms" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="services" value="cleaned data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="services" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="elo" value="compute ratings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="services" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="db" value="read/write">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="views" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="models" value="query / save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="models" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="db" value="ORM SQL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="views" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="templates" value="render context">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="templates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="static" value="CSS / JS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="templates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;startArrow=none;" target="browser" value="HTML response">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="settings" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;" target="urls" value="configures">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" target="services" value="staff actions call&#xa;same services">
+          <mxGeometry relative="1" y="-5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

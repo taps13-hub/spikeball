@@ -4,8 +4,8 @@
   <section class="page-heading">
     <div>
       <p class="eyebrow">The club standings</p>
-      <h1>A little friendly<br>competition.</h1>
-      <p class="lede">Every rally counts. See where everyone stands after the latest games.</p>
+      <h1 id="club-quote">A little friendly<br>competition.</h1>
+      <p class="lede">Every rally counts. Keep your eyes on the leaderboard.</p>
     </div>
     {% if user.is_authenticated %}
       <a class="button" href="{% url 'match_new' %}">Record a match <span aria-hidden="true">↗</span></a>
@@ -51,4 +51,28 @@
       </div>
     {% endif %}
   </section>
+{% endblock %}
+{% block scripts %}
+  <script>
+    const quotes = [
+      'How many cooked dinners would it take\n to let someone shit on you ?',
+      'Ughhh\n im with Zac.',
+      'Slip on a shirt, slop on some sunscreen, and slap that ball !',
+      'A little "friendly"\ncompetition...',
+      'Has Zac won\na game yet ?',
+      'The early bird\n gets the first slap of the ball',
+      '"Smack that, all on the flooor, smack that, give me some mooore, smack that, till you get sooore" - Akon ft. Eminem',
+      '"Pain heals. Chicks dig scars. Glory lasts forever." — Varsity Blues', 
+      '"If you\'re gonna win, you gotta pay a price." — Miracle',
+      "If the ball was my life, and the net was my destiny, then every serve would be a step towards my fate.",
+      "Hard work beats talent when talent doesn't work hard"
+    ];
+    const quoteHeading = document.querySelector('#club-quote');
+    let quoteIndex = Math.floor(Math.random() * quotes.length);
+
+    if (quoteHeading) {
+      quoteHeading.style.whiteSpace = 'pre-line';
+      quoteHeading.textContent = quotes[quoteIndex];
+    }
+  </script>
 {% endblock %}

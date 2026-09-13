@@ -13,15 +13,29 @@ from django_ratelimit.decorators import ratelimit
 
 from .forms import CorrectionForm, InvitationForm, MATCH_DATA_FIELDS
 from .invitations import (
-    issue_invitation, require_inviter, revoke_invitation, send_invitation,
+    issue_invitation,
+    require_inviter,
+    revoke_invitation,
+    send_invitation,
 )
-from .models import Invitation, Match, MatchRevision, Player, RatingHistory, RatingState, User
+from .models import (
+    Invitation,
+    Match,
+    MatchRevision,
+    Player,
+    RatingHistory,
+    RatingState,
+    User,
+)
 from .services import add_player, correct_match
 
 admin.site.site_header = "Spikeball administration"
 admin.site.site_title = "Spikeball admin"
 admin.site.login = ratelimit(
-    key="ip", rate="10/m", method="POST", block=True,
+    key="ip",
+    rate="10/m",
+    method="POST",
+    block=True,
 )(admin.site.login)
 
 
@@ -41,7 +55,9 @@ class AccountChangeForm(UserChangeForm):
 class AccountAdmin(UserAdmin):
     add_form = AccountCreationForm
     form = AccountChangeForm
-    add_fieldsets = ((None, {"fields": ("username", "email", "password1", "password2")}),)
+    add_fieldsets = (
+        (None, {"fields": ("username", "email", "password1", "password2")}),
+    )
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -77,7 +93,11 @@ class PlayerAdmin(NoDeleteAdmin):
                 obj.save(update_fields=["name"])
         else:
             saved = add_player(actor=request.user, name=obj.name)
-            obj.pk, obj.rating, obj.created_at = saved.pk, saved.rating, saved.created_at
+            obj.pk, obj.rating, obj.created_at = (
+                saved.pk,
+                saved.rating,
+                saved.created_at,
+            )
             obj._state = saved._state
 
 
@@ -94,15 +114,25 @@ class ReadOnlyAdmin(NoDeleteAdmin):
 
 @admin.register(Match)
 class MatchAdmin(ReadOnlyAdmin):
-    list_display = ("id", "played_at", "team1_score", "team2_score", "created_by", "voided_at")
+    list_display = (
+        "id",
+        "played_at",
+        "team1_score",
+        "team2_score",
+        "created_by",
+        "voided_at",
+    )
     list_filter = ("voided_at",)
     change_form_template = "admin/leaderboard/match/change_form.html"
 
     def get_urls(self):
-        return [path(
-            "<int:object_id>/correct/", self.admin_site.admin_view(self.correct_view),
-            name="leaderboard_match_correct",
-        )] + super().get_urls()
+        return [
+            path(
+                "<int:object_id>/correct/",
+                self.admin_site.admin_view(self.correct_view),
+                name="leaderboard_match_correct",
+            )
+        ] + super().get_urls()
 
     def correct_view(self, request, object_id):
         if not request.user.has_perm("leaderboard.change_match"):
@@ -112,26 +142,41 @@ class MatchAdmin(ReadOnlyAdmin):
         if request.method == "POST" and form.is_valid():
             try:
                 correct_match(
-                    actor=request.user, match_id=object_id,
+                    actor=request.user,
+                    match_id=object_id,
                     data={key: form.cleaned_data[key] for key in MATCH_DATA_FIELDS},
-                    reason=form.cleaned_data["reason"], void=form.cleaned_data["void"],
+                    reason=form.cleaned_data["reason"],
+                    void=form.cleaned_data["void"],
                 )
             except ValidationError as error:
                 form.add_error(None, "; ".join(error.messages))
             else:
                 messages.success(request, "Result updated; ratings rebuilt.")
                 return redirect("admin:leaderboard_match_changelist")
-        return render(request, "admin/leaderboard/form.html", {
-            **self.admin_site.each_context(request),
-            "form": form, "title": f"Correct match #{object_id}", "opts": self.model._meta,
-        })
+        return render(
+            request,
+            "admin/leaderboard/form.html",
+            {
+                **self.admin_site.each_context(request),
+                "form": form,
+                "title": f"Correct match #{object_id}",
+                "opts": self.model._meta,
+            },
+        )
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        return super().change_view(request, object_id, form_url, {
-            **(extra_context or {}),
-            "can_correct": request.user.has_perm("leaderboard.change_match"),
-            "correction_url": reverse("admin:leaderboard_match_correct", args=[object_id]),
-        })
+        return super().change_view(
+            request,
+            object_id,
+            form_url,
+            {
+                **(extra_context or {}),
+                "can_correct": request.user.has_perm("leaderboard.change_match"),
+                "correction_url": reverse(
+                    "admin:leaderboard_match_correct", args=[object_id]
+                ),
+            },
+        )
 
 
 @admin.register(RatingHistory)
@@ -153,18 +198,27 @@ class InvitationAdmin(ReadOnlyAdmin):
     change_form_template = "admin/leaderboard/invitation/change_form.html"
 
     def get_readonly_fields(self, request, obj=None):
-        return tuple(name for name in super().get_readonly_fields(request, obj)
-                     if name != "token_hash")
+        return tuple(
+            name
+            for name in super().get_readonly_fields(request, obj)
+            if name != "token_hash"
+        )
 
     def has_add_permission(self, request):
         return request.user.has_perm("leaderboard.add_invitation")
 
     def get_urls(self):
         return [
-            path("<int:object_id>/resend/", self.admin_site.admin_view(self.resend_view),
-                 name="leaderboard_invitation_resend"),
-            path("<int:object_id>/revoke/", self.admin_site.admin_view(self.revoke_view),
-                 name="leaderboard_invitation_revoke"),
+            path(
+                "<int:object_id>/resend/",
+                self.admin_site.admin_view(self.resend_view),
+                name="leaderboard_invitation_resend",
+            ),
+            path(
+                "<int:object_id>/revoke/",
+                self.admin_site.admin_view(self.revoke_view),
+                name="leaderboard_invitation_revoke",
+            ),
         ] + super().get_urls()
 
     def deliver(self, request, invitation, token):
@@ -185,17 +239,24 @@ class InvitationAdmin(ReadOnlyAdmin):
         if request.method == "POST" and form.is_valid():
             try:
                 invitation, token = issue_invitation(
-                    actor=request.user, email=form.cleaned_data["email"],
+                    actor=request.user,
+                    email=form.cleaned_data["email"],
                 )
             except ValidationError as error:
                 form.add_error(None, "; ".join(error.messages))
             else:
                 self.deliver(request, invitation, token)
                 return redirect("admin:leaderboard_invitation_change", invitation.pk)
-        return render(request, "admin/leaderboard/form.html", {
-            **self.admin_site.each_context(request),
-            "form": form, "title": "Invite a friend", "opts": self.model._meta,
-        })
+        return render(
+            request,
+            "admin/leaderboard/form.html",
+            {
+                **self.admin_site.each_context(request),
+                "form": form,
+                "title": "Invite a friend",
+                "opts": self.model._meta,
+            },
+        )
 
     @method_decorator(require_POST)
     def resend_view(self, request, object_id):
@@ -203,7 +264,9 @@ class InvitationAdmin(ReadOnlyAdmin):
         invitation = get_object_or_404(Invitation, pk=object_id)
         try:
             invitation, token = issue_invitation(
-                actor=request.user, email=invitation.email, invitation_id=object_id,
+                actor=request.user,
+                email=invitation.email,
+                invitation_id=object_id,
             )
         except ValidationError as error:
             messages.error(request, "; ".join(error.messages))
@@ -224,9 +287,18 @@ class InvitationAdmin(ReadOnlyAdmin):
         return redirect("admin:leaderboard_invitation_change", object_id)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        return super().change_view(request, object_id, form_url, {
-            **(extra_context or {}),
-            "can_invite": self.has_add_permission(request),
-            "resend_url": reverse("admin:leaderboard_invitation_resend", args=[object_id]),
-            "revoke_url": reverse("admin:leaderboard_invitation_revoke", args=[object_id]),
-        })
+        return super().change_view(
+            request,
+            object_id,
+            form_url,
+            {
+                **(extra_context or {}),
+                "can_invite": self.has_add_permission(request),
+                "resend_url": reverse(
+                    "admin:leaderboard_invitation_resend", args=[object_id]
+                ),
+                "revoke_url": reverse(
+                    "admin:leaderboard_invitation_revoke", args=[object_id]
+                ),
+            },
+        )

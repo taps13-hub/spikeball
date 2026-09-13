@@ -15,8 +15,11 @@ PLAYER_FIELDS = (
     "team1_player1", "team1_player2", "team2_player1", "team2_player2",
 )
 
-
 class User(AbstractUser):
+    """Inherit the AbstractUser which is an abstract base class for user models. '
+    Abstract base classes 
+    
+    """
     email = models.EmailField(unique=True)
     REQUIRED_FIELDS = ["email"]
 
@@ -38,9 +41,9 @@ class User(AbstractUser):
         self.email = self.email.strip().lower()
         super().save(*args, **kwargs)
 
-
 class Player(models.Model):
     name = models.CharField(max_length=100)
+    description = models.TextField(blank="short description")
     rating = models.DecimalField(max_digits=18, decimal_places=6, default=Decimal("1000"))
     created_at = models.DateTimeField(auto_now_add=True)
 

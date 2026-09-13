@@ -27,13 +27,17 @@ class LockedDatabaseCache(DatabaseCache):
         with connection.cursor() as cursor:
             table = connection.ops.quote_name(self._table)
             cursor.execute(
-                f"SELECT expires FROM {table} WHERE cache_key = %s", [stored_key],
+                f"SELECT expires FROM {table} WHERE cache_key = %s",
+                [stored_key],
             )
             expires = cursor.fetchone()[0]
         value += delta
         # BaseCache.incr resets the TTL; hourly limits must retain their window.
         if not self._base_set(
-            "set", stored_key, value, (expires - timezone.now()).total_seconds(),
+            "set",
+            stored_key,
+            value,
+            (expires - timezone.now()).total_seconds(),
         ):
             raise ValueError("Unable to update the rate-limit counter.")
         return value

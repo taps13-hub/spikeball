@@ -8,7 +8,7 @@ from .models import Match, Player, User
 class PlayerForm(forms.ModelForm):
     class Meta:
         model = Player
-        fields = ["name"]
+        fields = ["name", "description"]
 
 
 class MatchForm(forms.ModelForm):
@@ -17,12 +17,20 @@ class MatchForm(forms.ModelForm):
     class Meta:
         model = Match
         fields = [
-            "team1_player1", "team1_player2", "team2_player1", "team2_player2",
-            "team1_score", "team2_score", "played_at",
+            "team1_player1",
+            "team1_player2",
+            "team2_player1",
+            "team2_player2",
+            "team1_score",
+            "team2_score",
+            "played_at",
         ]
-        widgets = {"played_at": forms.DateTimeInput(
-            format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"},
-        )}
+        widgets = {
+            "played_at": forms.DateTimeInput(
+                format="%Y-%m-%dT%H:%M",
+                attrs={"type": "datetime-local"},
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -30,14 +38,20 @@ class MatchForm(forms.ModelForm):
             f"Time zone: {timezone.get_current_timezone_name()}. "
             "Earlier results recalculate later ratings."
         )
-        for field in ("team1_player1", "team1_player2", "team2_player1", "team2_player2"):
+        for field in (
+            "team1_player1",
+            "team1_player2",
+            "team2_player1",
+            "team2_player2",
+        ):
             self.fields[field].queryset = Player.objects.order_by("name", "id")
 
 
 class CorrectionForm(MatchForm):
     reason = forms.CharField(widget=forms.Textarea(attrs={"rows": 3}))
     void = forms.BooleanField(
-        required=False, label="Void this result",
+        required=False,
+        label="Void this result",
         help_text="Retain the result for audit, but exclude it from rankings.",
     )
 
