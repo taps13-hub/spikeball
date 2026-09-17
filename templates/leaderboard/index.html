@@ -46,7 +46,7 @@
           <a class="button" href="{% url 'player_new' %}">Add the first player</a>
         {% else %}
           <a class="button" href="{% url 'login' %}">Log in to add a player</a>
-          <p class="small muted">Need an account? Ask a club administrator for an invitation.</p>
+          {% if email_features_enabled %}<p class="small muted">Need an account? Ask a club administrator for an invitation.</p>{% else %}<p class="small muted">The site owner will add players and record games. No account is needed to view the standings.</p>{% endif %}
         {% endif %}
       </div>
     {% endif %}

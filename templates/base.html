@@ -45,7 +45,7 @@
       {% if user.is_authenticated %}
         <a href="{% url 'password_change' %}">Change password</a>
       {% else %}
-        <p>Public standings · Invite-only scorekeeping</p>
+        <p>Public standings · {% if email_features_enabled %}Invite-only{% else %}Owner-managed{% endif %} scorekeeping</p>
       {% endif %}
     </div>
   </footer>

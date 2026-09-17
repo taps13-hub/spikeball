@@ -11,10 +11,12 @@ from django.db import IntegrityError, transaction
 from django.urls import reverse
 from django.utils import timezone
 
+from .email_features import require_email_features
 from .models import Invitation, User
 
 
 def require_inviter(actor):
+    require_email_features()
     if not actor.is_active or not actor.is_staff or not (
         actor.is_superuser or actor.has_perm("leaderboard.add_invitation")
     ):
@@ -57,6 +59,7 @@ def issue_invitation(*, actor, email, invitation_id=None):
 
 
 def send_invitation(invitation, token):
+    require_email_features()
     url = settings.PUBLIC_BASE_URL + reverse("invitation_accept", args=[token])
     sent = send_mail(
         "You're invited to Spikeball",
@@ -81,6 +84,7 @@ def revoke_invitation(*, actor, invitation_id):
 
 
 def accept_invitation(*, token, username, password):
+    require_email_features()
     try:
         with transaction.atomic():
             invitation = Invitation.objects.select_for_update().filter(

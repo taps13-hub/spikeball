@@ -43,7 +43,7 @@ class User(AbstractUser):
 
 class Player(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField(blank="short description")
+    description = models.TextField(blank=True, default="")
     rating = models.DecimalField(max_digits=18, decimal_places=6, default=Decimal("1000"))
     created_at = models.DateTimeField(auto_now_add=True)
 

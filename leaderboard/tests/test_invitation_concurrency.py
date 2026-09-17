@@ -3,12 +3,13 @@ from threading import Barrier
 
 from django.core.exceptions import ValidationError
 from django.db import close_old_connections, connections
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 
 from leaderboard.invitations import accept_invitation, issue_invitation
 from leaderboard.models import User
 
 
+@override_settings(EMAIL_FEATURES_ENABLED=True)
 class InvitationConcurrencyTests(TransactionTestCase):
     def test_one_invitation_cannot_create_two_accounts(self):
         admin = User.objects.create_superuser("admin", "admin@example.com", "Admin-passphrase-42")

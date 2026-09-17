@@ -6,6 +6,11 @@ administrator corrections.
 
 Start with [SPEC.md](SPEC.md) for the design decisions and component explanations.
 
+For a first public deployment with **only your administrator account and no email
+setup**, follow [Deploy on Railway](docs/deployment.md). Visitors can view the
+standings without accounts; you record games for all players. No purchased domain
+or email provider is required for this launch.
+
 ## How the app works
 
 Django receives browser requests and renders HTML templates. PostgreSQL stores
@@ -100,6 +105,14 @@ Open **http://localhost:8000/**. Manage the group at **/admin/**.
 
 ## First session with friends
 
+This section describes the email-enabled mode (the existing default). For an
+owner-managed launch, set `EMAIL_FEATURES_ENABLED=0`: invitations, invitation
+acceptance, and all password-reset routes return 403 and are removed from the
+relevant UI. Login, authenticated password changes, and administrator operations
+remain available. Recover a forgotten owner password with
+`python manage.py changepassword <username>` in the deployed service's secure
+console. No account is needed to have a player profile or appear in results.
+
 1. Log in as your administrator and add player profiles through **Add player**.
    Profiles are separate from accounts: players do not need to log in to be
    included in results.
@@ -172,18 +185,42 @@ A free web plan does not imply a permanent free database or working SMTP.
 | `PUBLIC_BASE_URL` | Canonical HTTPS origin for invitations/reset links, e.g. `https://spikeball.example.com`. |
 | `DATABASE_URL` | Provider PostgreSQL URL, normally including `?sslmode=require`. Overrides local `PG*` connection settings. |
 | `TIME_ZONE` | Your group's display timezone. |
+| `EMAIL_FEATURES_ENABLED=0` | Owner-managed launch without email: disable invitations/signup and email password resets. Defaults to `1` to preserve existing installations. |
 | `EMAIL_HOST`, `EMAIL_PORT` | SMTP server and port; port defaults to 587. |
 | `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | SMTP credentials. |
 | `EMAIL_USE_TLS=1` | Use STARTTLS; confirm your provider supports it. |
 | `DEFAULT_FROM_EMAIL` | A provider-verified sender address. |
 | `INVITATION_DAYS` | Invitation validity, default 7. Password reset tokens last one hour. |
 | `TRUST_PROXY_HTTPS=1` | Trust the ingress's `X-Forwarded-Proto` only when it strips client-supplied values and direct backend access is blocked. |
+| `TRUST_PROXY_CLIENT_IP=1` | Use the ingress's single validated `X-Real-IP` for rate limits. Off by default; enable only after verifying that the ingress overwrites it and cannot be bypassed. |
 | `FORWARDED_ALLOW_IPS` | Trusted proxy addresses for Gunicorn; set according to the host's documentation. |
 | `PORT`, `WEB_CONCURRENCY` | Gunicorn port (8000) and worker count (2). |
 
 Generate the Django secret locally with
 `python -c 'import secrets; print(secrets.token_urlsafe(64))'` and save it in
 your host's secret settings. Never commit it.
+
+Email settings are not needed when `EMAIL_FEATURES_ENABLED=0`. Leave debug off;
+console email and dummy delivery backends are not a production substitute.
+
+The `Dockerfile` packages Python, dependencies, and collected static assets,
+then runs Gunicorn as a non-root user. It does not include `.env` files or run
+migrations at startup. For container hosts, build the image, run the release
+command once, and start it with the documented environment:
+
+```bash
+docker build -t spikeball .
+# Disposable PostgreSQL/container checks (requires a working Docker engine):
+bash scripts/smoke-container.sh spikeball
+# In the deployment's release job, with access to its database:
+python manage.py check --deploy && python manage.py migrate --noinput
+```
+
+Configure `/healthz/` as the deployment readiness path. It returns `200` with
+`ok` when PostgreSQL responds, or `503` with `unavailable` on a database error.
+Only this exact path is exempt from the app's HTTP-to-HTTPS redirect so an internal
+probe works. It accepts GET/HEAD, exposes no application data, and is not cached.
+Add the provider's probe hostname to allowed hosts where required.
 
 Use these provider-independent commands:
 
@@ -221,12 +258,20 @@ advisory lock so limits work across Gunicorn workers without Redis. This small
 adapter has a concurrent increment test; Django's unmodified database cache
 does not provide atomic increments.
 
-The app uses `REMOTE_ADDR`, not untrusted forwarded headers. Configure the host
-to supply the real client address through a trusted ingress, or apply equivalent
-limits there. If only a proxy address reaches Django, users behind that proxy
-share a limit; do not "fix" this by blindly trusting `X-Forwarded-For`.
+By default, the app uses `REMOTE_ADDR` and ignores forwarded client-IP headers.
+When the hosting ingress overwrites `X-Real-IP` and untrusted traffic cannot bypass
+it, `TRUST_PROXY_CLIENT_IP=1` normalizes that single IP before all rate-limit
+consumers, including admin login. Missing/malformed headers then return 400,
+except an internal `/healthz/` probe may omit the header. `X-Forwarded-For` is
+never used. Verify this trust boundary on your host before enabling the option.
+Otherwise visitors may share the proxy's rate-limit bucket; do not disable limits
+to work around this.
 
 ### Email and launch checks
+
+For the no-email launch, verify owner login, result entry, public viewing, and
+that invitation/password-reset URLs are disabled instead of testing mail delivery.
+The following email steps apply only when enabling invitations later.
 
 Verify sender/domain ownership with your SMTP provider, then send an invitation
 and complete a password reset using the public URL. Reset requests deliberately

@@ -1,23 +1,42 @@
+import logging
 import uuid
 
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db import DatabaseError, connection
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_safe
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit.exceptions import Ratelimited
 
+from .email_features import EmailFeaturesDisabled, email_features_required
 from .forms import InvitationAcceptForm, MATCH_DATA_FIELDS, MatchForm, PlayerForm
 from .invitations import accept_invitation, password_reset_options, valid_invitation
 from .models import Match, PLAYER_FIELDS, Player, RatingHistory, User
 from .services import add_player, submit_match
+
+logger = logging.getLogger(__name__)
+
+
+@never_cache
+@require_safe
+def health(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except DatabaseError:
+        logger.error("Readiness check failed: database unavailable.")
+        return HttpResponse("unavailable\n", status=503, content_type="text/plain")
+    return HttpResponse("ok\n", content_type="text/plain")
+
 
 def records():
     totals = {}
@@ -98,6 +117,7 @@ def match_new(request):
 
 
 @never_cache
+@email_features_required
 @sensitive_post_parameters("password1", "password2")
 @ratelimit(key="ip", rate="20/h", method="POST", block=True)
 @require_http_methods(["GET", "POST"])
@@ -147,7 +167,13 @@ class PasswordResetView(auth_views.PasswordResetView):
         return redirect(self.get_success_url())
 
 
+@never_cache
 def permission_denied(request, exception):
+    if isinstance(exception, EmailFeaturesDisabled):
+        return render(request, "leaderboard/error.html", {
+            "title": "Email features are disabled",
+            "detail": "Invitations and password resets are not available on this site.",
+        }, status=403)
     if isinstance(exception, Ratelimited):
         response = render(request, "leaderboard/error.html", {
             "title": "Too many attempts",

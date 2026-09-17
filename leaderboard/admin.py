@@ -1,5 +1,6 @@
 import smtplib
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
@@ -197,6 +198,12 @@ class InvitationAdmin(ReadOnlyAdmin):
     exclude = ("token_hash",)
     change_form_template = "admin/leaderboard/invitation/change_form.html"
 
+    def has_module_permission(self, request):
+        return settings.EMAIL_FEATURES_ENABLED and super().has_module_permission(request)
+
+    def has_view_permission(self, request, obj=None):
+        return settings.EMAIL_FEATURES_ENABLED and super().has_view_permission(request, obj)
+
     def get_readonly_fields(self, request, obj=None):
         return tuple(
             name
@@ -205,7 +212,9 @@ class InvitationAdmin(ReadOnlyAdmin):
         )
 
     def has_add_permission(self, request):
-        return request.user.has_perm("leaderboard.add_invitation")
+        return settings.EMAIL_FEATURES_ENABLED and request.user.has_perm(
+            "leaderboard.add_invitation",
+        )
 
     def get_urls(self):
         return [

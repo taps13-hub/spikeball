@@ -10,8 +10,12 @@
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">
       {% include "leaderboard/_form_fields.html" %}
-      <div class="form-actions"><button class="button" type="submit">Log in</button><a href="{% url 'password_reset' %}">Forgot password?</a></div>
+      <div class="form-actions"><button class="button" type="submit">Log in</button>{% if email_features_enabled %}<a href="{% url 'password_reset' %}">Forgot password?</a>{% endif %}</div>
     </form>
-    <p class="small muted">New here? Accounts are invitation-only. Ask a club administrator to invite you.</p>
+    {% if email_features_enabled %}
+      <p class="small muted">New here? Accounts are invitation-only. Ask a club administrator to invite you.</p>
+    {% else %}
+      <p class="small muted">The standings are public. Accounts are managed by the site owner; invitations and email password resets are currently disabled.</p>
+    {% endif %}
   </div>
 {% endblock %}

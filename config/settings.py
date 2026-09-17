@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "leaderboard.middleware.TrustedProxyMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -56,11 +57,13 @@ TEMPLATES = [{
         "django.template.context_processors.request",
         "django.contrib.auth.context_processors.auth",
         "django.contrib.messages.context_processors.messages",
+        "leaderboard.email_features.context",
     ]},
 }]
 WSGI_APPLICATION = "config.wsgi.application"
 
 db = conninfo_to_dict(os.environ["DATABASE_URL"]) if os.getenv("DATABASE_URL") else {}
+db.setdefault("connect_timeout", "5")
 DATABASES = {"default": {
     "ENGINE": "django.db.backends.postgresql",
     "NAME": db.pop("dbname", os.getenv("PGDATABASE", "spikeball")),
@@ -109,6 +112,7 @@ EMAIL_BACKEND = (
     "django.core.mail.backends.console.EmailBackend" if DEBUG
     else "django.core.mail.backends.smtp.EmailBackend"
 )
+EMAIL_FEATURES_ENABLED = os.getenv("EMAIL_FEATURES_ENABLED", "1") == "1"
 EMAIL_HOST = os.getenv("EMAIL_HOST", "")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
@@ -119,10 +123,12 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "spikeball@localhost")
 INVITATION_DAYS = int(os.getenv("INVITATION_DAYS", "7"))
 PASSWORD_RESET_TIMEOUT = 3600
 SECURE_SSL_REDIRECT = not DEBUG
+SECURE_REDIRECT_EXEMPT = [r"^healthz/$"]
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_REFERRER_POLICY = "same-origin"
+TRUST_PROXY_CLIENT_IP = os.getenv("TRUST_PROXY_CLIENT_IP", "0") == "1"
 if os.getenv("TRUST_PROXY_HTTPS", "0") == "1":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 LOGGING = {

@@ -23,6 +23,7 @@ PASSWORD = "Long-enough-spikeball-phrase-82"
 
 
 @override_settings(
+    EMAIL_FEATURES_ENABLED=True,
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     RATELIMIT_ENABLE=False,
     STORAGES={
