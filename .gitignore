@@ -4,6 +4,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+.secrets/
 staticfiles/
 *.dump
 .coverage
